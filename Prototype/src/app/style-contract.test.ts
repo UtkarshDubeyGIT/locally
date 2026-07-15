@@ -60,6 +60,36 @@ test("uses compact CRM spacing and a Phase 1 inspired agency shell", () => {
   );
 });
 
+test("keeps the desktop rail stable and converts it to a mobile drawer", () => {
+  expect(rule(globals, ".workspace")).toMatch(/align-items:\s*start/);
+
+  const sidebar = rule(globals, ".sidebar");
+  expect(sidebar).toMatch(/position:\s*sticky/);
+  expect(sidebar).toMatch(/top:\s*66px/);
+  expect(sidebar).toMatch(/height:\s*calc\(100dvh\s*-\s*66px\)/);
+  expect(sidebar).toMatch(/display:\s*flex/);
+  expect(sidebar).toMatch(/flex-direction:\s*column/);
+
+  expect(rule(globals, ".sidebar nav")).toMatch(/position:\s*static/);
+  expect(rule(globals, ".sidebar__footer")).toMatch(/margin-top:\s*auto/);
+
+  const tablet = globals.slice(
+    globals.indexOf("@media (max-width: 900px)"),
+    globals.indexOf("@media (max-width: 640px)"),
+  );
+  expect(rule(tablet, ".sidebar")).toMatch(/position:\s*fixed/);
+  expect(rule(tablet, ".sidebar")).toMatch(/transform:\s*translateX\(-105%\)/);
+  expect(rule(tablet, ".sidebar")).toMatch(/visibility:\s*hidden/);
+  expect(rule(tablet, '.sidebar[data-open="true"]')).toMatch(
+    /transform:\s*translateX\(0\)/,
+  );
+  expect(rule(tablet, '.sidebar[data-open="true"]')).toMatch(
+    /visibility:\s*visible/,
+  );
+  expect(rule(tablet, ".nav-toggle")).toMatch(/display:\s*inline-grid/);
+  expect(rule(tablet, ".nav-scrim")).toMatch(/position:\s*fixed/);
+});
+
 test("constrains the sign-in artwork to a responsive portrait frame", () => {
   const login = rule(globals, ".login");
   expect(login).toMatch(/max-width:\s*1320px/);
