@@ -1,0 +1,5 @@
+import { Badge, Card } from "@/components/ui";
+import { requireActor } from "@/lib/auth";
+import { getClientWorkspace } from "@/lib/data";
+import { sourceLabel } from "@/lib/format";
+export default async function ClientLocations(){const actor=await requireActor(["client_owner"]);if(!actor.client_id)return null;const d=await getClientWorkspace(actor.client_id);return <><div className="page-head"><div><p className="eyebrow">Four branches</p><h1>Each location, seen clearly.</h1><p>Addresses and phone numbers are plausible but deliberately non-operational demo details.</p></div></div><div className="grid grid--2">{d.locations.map(l=>{const p=d.performance.find(x=>x.location_id===l.id);return <Card key={l.id}>{l.image_path&&<div className="branch-image" role="img" aria-label={`${l.name} sweet-shop vignette`} style={{backgroundImage:`url(${l.image_path})`}}/>}<div className="card__meta"><Badge tone="accent">{sourceLabel.demo_data}</Badge><span>{p?.average_rating??"—"}★</span></div><h3>{l.name}</h3><p className="muted">{l.address}, {l.city}</p><p style={{marginTop:"1rem"}}>{l.phone}</p><a href={l.website_url??"#"}>Visit fictional branch page →</a></Card>})}</div></>}
