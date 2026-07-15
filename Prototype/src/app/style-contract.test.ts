@@ -124,3 +124,24 @@ test("constrains the sign-in artwork to a responsive portrait frame", () => {
     /height:\s*clamp\(240px,\s*34svh,\s*300px\)/,
   );
 });
+
+test("turns the visual report into a clean printable document", () => {
+  const print = globals.slice(globals.indexOf("@media print"));
+
+  expect(print).toContain("@media print");
+  expect(
+    rule(
+      print,
+      ".topbar, .sidebar, .nav-scrim, .print-report-button, .report-feedback",
+    ),
+  ).toMatch(/display:\s*none\s*!important/);
+  expect(rule(print, ".workspace")).toMatch(/display:\s*block/);
+  expect(rule(print, ".main")).toMatch(/width:\s*100%/);
+  expect(
+    rule(
+      print,
+      ".report-growth-board, .report-narrative, .report-branch-chart",
+    ),
+  ).toMatch(/break-inside:\s*avoid/);
+  expect(rule(print, "body")).toMatch(/print-color-adjust:\s*exact/);
+});
