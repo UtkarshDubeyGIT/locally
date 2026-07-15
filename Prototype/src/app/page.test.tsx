@@ -32,7 +32,7 @@ test("introduces signed-out visitors to Locally and leads them into the workspac
   expect(
     screen.getByRole("heading", {
       level: 1,
-      name: "Local search, looked after.",
+      name: "Local search, managed.",
     }),
   ).toBeVisible();
   expect(screen.getByRole("navigation", { name: "Primary" })).toBeVisible();
@@ -43,17 +43,16 @@ test("introduces signed-out visitors to Locally and leads them into the workspac
   ).toBeVisible();
 
   const workspaceLink = screen.getByRole("link", {
-    name: "Enter the workspace",
+    name: "Sign in",
   });
   expect(workspaceLink).toHaveAttribute("href", "/login");
   expect(screen.queryByText(/\bbrief\b/i)).not.toBeInTheDocument();
 
-  const sweetMotion = view.container.querySelectorAll("[data-sweet-motion]");
-  expect(sweetMotion.length).toBeGreaterThan(0);
-  sweetMotion.forEach((decoration) => {
-    expect(decoration).toHaveAttribute("aria-hidden", "true");
-    expect(decoration.querySelector("a, button")).toBeNull();
-  });
+  expect(view.container.querySelectorAll('a[href="/login"]')).toHaveLength(1);
+  expect(view.container.querySelectorAll(".eyebrow").length).toBeLessThanOrEqual(1);
+  expect(view.container.querySelector('[class*="heroSpine"]')).toBeNull();
+  expect(view.container.querySelector("[data-sweet-motion]")).toBeNull();
+  expect(screen.queryByText(/from signal to story/i)).not.toBeInTheDocument();
 });
 
 test("keeps authenticated visitors on the direct path to their role workspace", async () => {

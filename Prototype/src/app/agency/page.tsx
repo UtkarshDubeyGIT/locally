@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Badge, Seal } from "@/components/ui";
+import { Badge, EmptyState } from "@/components/ui";
 import { getAgencyOverview } from "@/lib/data";
 import { formatDate, titleCase } from "@/lib/format";
 
@@ -74,11 +74,9 @@ export default async function AgencyHome() {
   return <>
     <div className="page-head page-head--crm">
       <div>
-        <p className="eyebrow">Agency overview · {formatDate(new Date(), { weekday: "long", day: "numeric", month: "long" })}</p>
-        <h1>Good morning. Here’s what deserves attention.</h1>
-        <p>A working view of clients, queues, decisions, and the next useful move.</p>
+        <h1>Agency overview</h1>
+        <p>{formatDate(new Date(), { weekday: "long", day: "numeric", month: "long" })}. Review current queues, decisions, and client workload.</p>
       </div>
-      <Seal>{needsReply.length}<br />replies waiting</Seal>
     </div>
 
     <section className="crm-metrics" aria-label="Portfolio metrics">
@@ -111,8 +109,8 @@ export default async function AgencyHome() {
     </div>
 
     <section className="section crm-portfolio">
-      <div className="section__head"><div><span className="section__number">02</span><h2>Client portfolio</h2><p>Relationship health and operational workload in one compact view.</p></div><Link className="button button--quiet" href="/agency/clients">Manage clients</Link></div>
-      <div className="crm-table-wrap">
+      <div className="section__head"><div><h2>Client portfolio</h2><p>Current status and operational workload for visible clients.</p></div><Link className="button button--quiet" href="/agency/clients">Manage clients</Link></div>
+      {portfolio.length ? <div className="crm-table-wrap">
         <table className="crm-table" aria-label="Client portfolio">
           <thead><tr><th>Client</th><th>Status</th><th className="numeric">Branches</th><th className="numeric">Open actions</th><th className="numeric">Reply queue</th><th>Latest report</th></tr></thead>
           <tbody>{portfolio.map(({ client, locations, actions, replyQueue, report }) => <tr key={client.id}>
@@ -124,7 +122,7 @@ export default async function AgencyHome() {
             <td data-label="Latest report">{report ? <span className="report-state"><strong>{formatDate(report.month, { month: "short", year: "numeric" })}</strong><small>{titleCase(report.status)}</small></span> : <span className="muted">Not created</span>}</td>
           </tr>)}</tbody>
         </table>
-      </div>
+      </div> : <EmptyState title="No clients are visible">Clients will appear here when they are created or assigned to you.</EmptyState>}
     </section>
   </>;
 }

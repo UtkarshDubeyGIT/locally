@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
 import { Brand } from "@/components/brand";
 import { PendingButton } from "@/components/pending-button";
@@ -13,6 +14,9 @@ export function WorkspaceShell({ actor, area, children }: { actor: Profile; area
   const pathname = usePathname();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const navigationToggleRef = useRef<HTMLButtonElement>(null);
+  const firstNavigationLinkRef = useRef<HTMLAnchorElement>(null);
+  const wasNavigationOpen = useRef(false);
   const agency = [
     ["Overview", "/agency"], ["Clients", "/agency/clients"], ["Reviews", "/agency/reviews"],
     ["Audits", "/agency/audits"], ["Competitors", "/agency/competitors"], ["Actions", "/agency/actions"],
@@ -24,14 +28,26 @@ export function WorkspaceShell({ actor, area, children }: { actor: Profile; area
   const roleLabel = actor.role.replaceAll("_", " ");
 
   useEffect(() => {
-    if (!navigationOpen) return;
+    if (!navigationOpen) {
+      if (wasNavigationOpen.current) navigationToggleRef.current?.focus();
+      wasNavigationOpen.current = false;
+      return;
+    }
+
+    wasNavigationOpen.current = true;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    firstNavigationLinkRef.current?.focus();
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setNavigationOpen(false);
     };
 
     document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
   }, [navigationOpen]);
 
   return <div className="shell" data-area={area}>
@@ -39,47 +55,43 @@ export function WorkspaceShell({ actor, area, children }: { actor: Profile; area
       <div className="topbar__identity">
         <button
           type="button"
+          ref={navigationToggleRef}
           className="nav-toggle"
           aria-controls="workspace-navigation"
           aria-expanded={navigationOpen}
           aria-label={navigationOpen ? "Close navigation" : "Open navigation"}
           onClick={() => setNavigationOpen((open) => !open)}
         >
-          <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-            {navigationOpen
-              ? <path d="m6 6 12 12M18 6 6 18" />
-              : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
+          {navigationOpen ? <X aria-hidden /> : <Menu aria-hidden />}
         </button>
         <Link href={`/${area}`} className="brand" aria-label="Locally home"><Brand /></Link>
         <span className="topbar__divider" aria-hidden />
-        <div className="topbar__context"><span>{area === "agency" ? "Agency CRM" : "Client portal"}</span><strong>{area === "agency" ? "Operations desk" : "Madhur Sweets"}</strong></div>
+        <div className="topbar__context"><span>Workspace</span><strong>{area === "agency" ? "Agency" : "Madhur Sweets"}</strong></div>
       </div>
       <div className="topnav">
         {isNavigating ? <span className="navigation-status" role="status" aria-live="polite"><span aria-hidden className="loading-indicator__dot" />Loading...</span> : null}
-        <Badge tone="accent">Demo data</Badge>
-        <span className="desktop-only">{actor.full_name}</span>
+        <Badge>Fictional demo</Badge>
         <form action={logoutAction}><PendingButton variant="quiet" type="submit" pendingLabel="Signing out…">Sign out</PendingButton></form>
       </div>
     </header>
     <div className="workspace">
       <aside className="sidebar" id="workspace-navigation" data-open={navigationOpen}>
-        <div className="workspace-context"><span className="eyebrow">{area} workspace</span><strong>{actor.full_name}</strong><span>{roleLabel}</span></div>
         <nav aria-label={`${area} navigation`}>
-          {links.map(([label,href]) => {
+          {links.map(([label,href], index) => {
             const active = pathname === href || (href !== `/${area}` && pathname.startsWith(`${href}/`));
             return <Link
               key={href}
+              ref={index === 0 ? firstNavigationLinkRef : undefined}
               href={href}
               aria-current={active ? "page" : undefined}
               onClick={() => {
                 setPendingHref(href === pathname ? null : href);
                 setNavigationOpen(false);
               }}
-            ><span>{label}</span>{pendingHref === href && isNavigating ? <span className="nav-link__pending" aria-hidden>•••</span> : null}</Link>;
+            ><span>{label}</span>{pendingHref === href && isNavigating ? <span className="nav-link__pending" aria-hidden>Opening</span> : null}</Link>;
           })}
         </nav>
-        <div className="sidebar__footer"><span className="status-dot" aria-hidden /><span>Workspace ready</span></div>
+        <div className="sidebar__footer"><strong>{actor.full_name}</strong><span>{roleLabel}</span><span>Fictional demo</span></div>
       </aside>
       {navigationOpen ? <button type="button" className="nav-scrim" aria-label="Dismiss navigation" onClick={() => setNavigationOpen(false)} /> : null}
       <main className="main">{children}</main>

@@ -1,28 +1,86 @@
-import { redirect } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+
 import { Brand } from "@/components/brand";
 import { LoginForm } from "@/components/login-form";
-import { getActor, actorHome } from "@/lib/auth";
+import { actorHome, getActor } from "@/lib/auth";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
   const actor = await getActor();
   if (actor) redirect(actorHome(actor.role));
+
   const { next } = await searchParams;
   const password = process.env.DEMO_PASSWORD ?? "Ask the project owner";
-  return <main className="login">
-    <div className="login__visual"><div className="hero"><div><p className="eyebrow" style={{color:"inherit"}}>Your local-search workspace</p><h1>Local work, clearly managed.</h1></div></div></div>
-    <section className="login__panel">
-      <Link href="/" className="brand" aria-label="Locally home"><Brand /></Link>
-      <h2>Welcome back.</h2>
-      <p className="muted">One calm place for the reviews, listings, audits, actions and reports that move a local business forward.</p>
-      <div style={{marginTop:"2rem"}}><LoginForm next={next}/></div>
-      <details className="credentials">
-        <summary>Demo accounts</summary>
-        <div className="credentials__item"><strong>Agency owner</strong><br/>owner@locally.demo</div>
-        <div className="credentials__item"><strong>SEO specialist</strong><br/>specialist@locally.demo</div>
-        <div className="credentials__item"><strong>Client owner</strong><br/>client@madhursweets.demo</div>
-        <div className="credentials__item"><strong>Password</strong><br/><code>{password}</code></div>
-      </details>
-    </section>
-  </main>;
+
+  return (
+    <main className="login">
+      <section className="login__panel" aria-labelledby="login-title">
+        <Link href="/" className="brand" aria-label="Locally home">
+          <Brand />
+        </Link>
+        <div className="login__intro">
+          <h1 id="login-title">Sign in to Locally</h1>
+          <p className="muted">
+            Manage reviews, listings, audits, actions and approved reports in
+            one workspace.
+          </p>
+        </div>
+        <div className="login__form">
+          <LoginForm next={next} />
+        </div>
+
+        <details className="credentials">
+          <summary>Demo accounts</summary>
+          <dl className="credentials__list">
+            <div className="credentials__item">
+              <dt>Agency owner</dt>
+              <dd>
+                <code>owner@locally.demo</code>
+              </dd>
+            </div>
+            <div className="credentials__item">
+              <dt>SEO specialist</dt>
+              <dd>
+                <code>specialist@locally.demo</code>
+              </dd>
+            </div>
+            <div className="credentials__item">
+              <dt>Client owner</dt>
+              <dd>
+                <code>client@madhursweets.demo</code>
+              </dd>
+            </div>
+            <div className="credentials__item">
+              <dt>Password</dt>
+              <dd>
+                <code>{password}</code>
+              </dd>
+            </div>
+          </dl>
+        </details>
+      </section>
+
+      <div className="login__visual">
+        <div className="hero login__art">
+          <Image
+            className="login__image"
+            src="/images/sweet-shop-hero.webp"
+            alt="A sweet-shop worker arranging mithai in a display"
+            fill
+            priority
+            sizes="(max-width: 900px) 100vw, 44vw"
+          />
+          <span className="login__shade" aria-hidden="true" />
+          <p className="login__caption">
+            Reviews, actions and reports for every location.
+          </p>
+        </div>
+      </div>
+    </main>
+  );
 }

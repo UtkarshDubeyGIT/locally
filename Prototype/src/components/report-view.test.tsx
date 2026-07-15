@@ -20,7 +20,18 @@ const metrics = {
 };
 
 test("turns the stored snapshot into directly labelled growth charts", () => {
-  render(<ReportView metrics={metrics} summary="Rating recovery is moving." />);
+  const view = render(
+    <ReportView metrics={metrics} summary="Response coverage improved this month." />,
+  );
+
+  expect(screen.getByRole("heading", { name: "Monthly performance" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Agency summary" })).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Branch ratings" })).toBeVisible();
+  expect(screen.queryByText(/month in motion/i)).not.toBeInTheDocument();
+  expect(view.container.querySelector(".report-section-index")).toBeNull();
+  expect(screen.queryByText("01")).not.toBeInTheDocument();
+  expect(screen.queryByText("02")).not.toBeInTheDocument();
+  expect(screen.queryByText("03")).not.toBeInTheDocument();
 
   expect(
     screen.getByRole("img", {

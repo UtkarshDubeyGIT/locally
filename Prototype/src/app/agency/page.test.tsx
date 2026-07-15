@@ -66,8 +66,9 @@ beforeEach(() => {
 });
 
 test("presents the agency overview as a compact CRM workspace", async () => {
-  render(await AgencyHome());
+  const view = render(await AgencyHome());
 
+  expect(screen.getByRole("heading", { level: 1, name: "Agency overview" })).toBeVisible();
   expect(screen.getByRole("region", { name: "Portfolio metrics" })).toBeVisible();
   expect(screen.getByRole("heading", { name: "Needs attention" })).toBeVisible();
   expect(screen.getByText("Verify festive opening hours")).toBeVisible();
@@ -77,5 +78,8 @@ test("presents the agency overview as a compact CRM workspace", async () => {
   expect(within(portfolio).getByText("Anand Bakery")).toBeVisible();
   expect(within(portfolio).getByRole("columnheader", { name: "Branches" })).toBeVisible();
   expect(within(portfolio).getByRole("columnheader", { name: "Reply queue" })).toBeVisible();
+  expect(screen.queryByText(/good morning/i)).not.toBeInTheDocument();
+  expect(view.container.querySelector(".seal")).toBeNull();
+  expect(view.container.querySelector(".section__number")).toBeNull();
   expect(screen.queryByText("Your client book")).not.toBeInTheDocument();
 });

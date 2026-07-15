@@ -28,22 +28,22 @@ function RatingMovement({ current, previous }: { current: number; previous: numb
       : `Average rating ${direction} from ${ratingText(previous)} to ${ratingText(current)} stars this month`;
   const headline =
     change > 0
-      ? "Ratings moved upward."
+      ? "Average rating increased"
       : change < 0
-        ? "Rating recovery is the next priority."
-        : "Ratings held their ground.";
+        ? "Average rating decreased"
+        : "Average rating held steady";
   const delta = `${change > 0 ? "+" : ""}${change.toFixed(1)}`;
 
   return (
-    <figure className="report-rating-chart" role="img" aria-label={accessibleLabel}>
+    <figure className="report-rating-chart">
       <div className="report-rating-chart__head">
         <div>
-          <p className="eyebrow">Rating movement</p>
+          <p className="report-label">Rating change</p>
           <h2>{headline}</h2>
         </div>
         <strong className="report-rating-chart__delta">{delta}</strong>
       </div>
-      <svg aria-hidden="true" viewBox="0 0 600 220" focusable="false">
+      <svg role="img" aria-label={accessibleLabel} viewBox="0 0 600 220" focusable="false">
         <line className="report-rating-chart__grid" x1="54" y1="56" x2="546" y2="56" />
         <line className="report-rating-chart__grid" x1="54" y1="114" x2="546" y2="114" />
         <line className="report-rating-chart__grid" x1="54" y1="172" x2="546" y2="172" />
@@ -58,7 +58,7 @@ function RatingMovement({ current, previous }: { current: number; previous: numb
         <text className="report-rating-chart__value" x="78" y={Math.max(30, previousY - 18)} textAnchor="middle">{ratingText(previous)}</text>
         <text className="report-rating-chart__value report-rating-chart__value--current" x="522" y={Math.max(30, currentY - 20)} textAnchor="middle">{ratingText(current)}</text>
       </svg>
-      <figcaption>Stored monthly rating snapshot · Mock GBP</figcaption>
+      <figcaption>Stored monthly rating snapshot, Mock GBP</figcaption>
     </figure>
   );
 }
@@ -97,18 +97,13 @@ export function ReportView({ metrics: raw, summary }: { metrics: unknown; summar
     <div className="report-visual">
       <section className="report-growth-section" aria-labelledby="report-growth-heading">
         <div className="report-section-title">
-          <span>01</span>
-          <div>
-            <p className="eyebrow">Growth at a glance</p>
-            <h2 id="report-growth-heading">The month in motion.</h2>
-          </div>
+          <h2 id="report-growth-heading">Monthly performance</h2>
         </div>
         <div className="report-growth-board">
           <RatingMovement current={metrics.averageRating} previous={previousRating} />
           <div className="report-progress-ledger">
             <div className="report-progress-ledger__head">
-              <p className="eyebrow">Progress measures</p>
-              <h3>The work behind the rating.</h3>
+              <h3>Supporting measures</h3>
             </div>
             <ProgressMeasure
               label="Reply coverage"
@@ -119,7 +114,7 @@ export function ReportView({ metrics: raw, summary }: { metrics: unknown; summar
             <ProgressMeasure
               label="Actions completed"
               value={actionCompletion}
-              detail={`${metrics.completedActions} done · ${metrics.openActions} still open`}
+              detail={`${metrics.completedActions} done, ${metrics.openActions} open`}
               accessibleLabel={`${actionCompletion}% of actions are complete`}
             />
             <ProgressMeasure
@@ -134,23 +129,15 @@ export function ReportView({ metrics: raw, summary }: { metrics: unknown; summar
 
       <section className="report-narrative" aria-labelledby="report-narrative-heading">
         <div className="report-section-title">
-          <span>02</span>
-          <div>
-            <p className="eyebrow">Agency summary and next steps</p>
-            <h2 id="report-narrative-heading">What the numbers mean.</h2>
-          </div>
+          <h2 id="report-narrative-heading">Agency summary</h2>
         </div>
         <p>{summary ?? "A concise summary is being prepared."}</p>
       </section>
 
       <section className="report-branch-section" aria-label="Branch rating comparison">
         <div className="report-section-title">
-          <span>03</span>
-          <div>
-            <p className="eyebrow">Branch comparison</p>
-            <h2>Where ratings are strongest.</h2>
-          </div>
-          <Badge tone="accent">Mock GBP</Badge>
+          <h2>Branch ratings</h2>
+          <Badge>Mock GBP</Badge>
         </div>
         <div className="report-branch-chart">
           {metrics.branchComparison.length ? (

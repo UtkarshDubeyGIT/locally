@@ -28,17 +28,23 @@ export default async function Onboarding({
       ? data.onboarding.answers_json
       : {}
   ) as Record<string, Record<string, string>>;
+  const pageTitle = {
+    1: "Business details",
+    2: "Locations",
+    3: "Goals and audience",
+    4: "Reporting preferences",
+    5: "Review and submit",
+  }[step];
 
   return (
     <>
       <div className="page-head">
         <div>
-          <p className="eyebrow">Step {Math.min(step, 4)} of 4</p>
-          <h1>{step === 5 ? "One last look." : "Tell us the business story."}</h1>
-          <p>
-            Your answers save after every step. You can sign out and resume
-            without losing your place.
+          <p className="eyebrow">
+            {step === 5 ? "Review" : `Step ${step} of 4`}
           </p>
+          <h1>{pageTitle}</h1>
+          <p>Your answers are saved after each step and can be resumed later.</p>
         </div>
       </div>
 
@@ -247,14 +253,11 @@ export default async function Onboarding({
 
         {step === 5 ? (
           <div className="stack">
-            <p className="review-copy">
-              “Madhur Sweets is ready to make every branch easier to find—and
-              every customer response more considered.”
-            </p>
+            <h3>Confirm the information below before submitting it to the agency.</h3>
             {Object.entries(answers).map(([key, value]) => (
               <div key={key}>
                 <p className="eyebrow">{key.replace("step", "Step ")}</p>
-                <p>{Object.values(value).join(" · ")}</p>
+                <p>{Object.values(value).join(", ")}</p>
               </div>
             ))}
             <form action={submitOnboardingAction}>

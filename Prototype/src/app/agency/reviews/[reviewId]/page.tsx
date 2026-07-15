@@ -31,15 +31,10 @@ export default async function ReviewDetail({
     <>
       <div className="page-head">
         <div>
-          <p className="eyebrow">
-            {r.locations.clients.business_name} · {r.locations.name}
-          </p>
-          <h1>
-            {r.reviewer_name} left a {r.rating}-star review.
-          </h1>
+          <p className="eyebrow">{r.locations.clients.business_name} · {r.locations.name}</p>
+          <h1>Review from {r.reviewer_name}</h1>
           <p>
-            {formatDate(r.review_date)} · {sourceLabel[r.source_type]} · This
-            entire workspace is hidden from client users.
+            {r.rating} stars · {formatDate(r.review_date)} · {sourceLabel[r.source_type]}
           </p>
         </div>
         <Badge tone={r.severity === "high" ? "bad" : "warn"}>
@@ -71,7 +66,7 @@ export default async function ReviewDetail({
         </Card>
 
         <Card>
-          <p className="eyebrow">Workflow</p>
+          <h3>Reply workflow</h3>
           <div className="list" style={{ marginTop: "1rem" }}>
             {[
               "Needs reply",
@@ -79,11 +74,9 @@ export default async function ReviewDetail({
               "Awaiting approval",
               "Approved",
               "Mock published",
-            ].map((step, index) => (
+            ].map((step) => (
               <div className="row" key={step}>
-                <span>
-                  {String(index + 1).padStart(2, "0")} · {step}
-                </span>
+                <span>{step}</span>
                 {titleCase(r.status) === step ? (
                   <Badge tone="accent">Current</Badge>
                 ) : null}
@@ -94,14 +87,13 @@ export default async function ReviewDetail({
       </div>
 
       <Section
-        number="01"
-        title="Draft with evidence in view"
-        intro="Language matching and structured classification come from OpenAI; deterministic safety rules run again before approval."
+        title="Reply draft"
+        intro="OpenAI generates a language-matched draft. Safety rules run again before approval."
       >
         {!reply ? (
           <Card className="empty">
-            <p className="eyebrow">No draft yet</p>
-            <h3>Start a careful response.</h3>
+            <h3>No reply draft yet</h3>
+            <p className="muted">Generate a draft, verify the facts, and review it before approval.</p>
             <div style={{ marginTop: "1.5rem" }}>
               <ReviewAIGenerator reviewId={r.id} />
             </div>
@@ -155,7 +147,7 @@ export default async function ReviewDetail({
                   {reply.prompt_version ?? "No prompt"}
                 </p>
                 <p className="muted">
-                  Generated {reply.generated_at ? formatDate(reply.generated_at) : "—"}
+                  Generated {reply.generated_at ? formatDate(reply.generated_at) : "Not available"}
                 </p>
               </div>
               {reply.status === "draft" ? (
@@ -198,9 +190,8 @@ export default async function ReviewDetail({
       </Section>
 
       <Section
-        number="02"
         title="Internal notes"
-        intro="These notes, the review, and all AI metadata are never selected for client users."
+        intro="Record branch context and verification requests for the agency team."
       >
         <div className="grid grid--2">
           <Card>
@@ -222,15 +213,17 @@ export default async function ReviewDetail({
           <Card>
             {notes.length ? (
               notes.map((note) => (
-                <div className="list-row" key={note.id}>
-                  <span className="list-row__index">•</span>
-                  <span>
+                <div
+                  key={note.id}
+                  style={{ padding: ".75rem 0", borderBottom: "1px solid var(--divider)" }}
+                >
+                  <p>
                     {note.note}
                     <br />
                     <small className="muted">
                       {note.profiles?.full_name} · {formatDate(note.created_at)}
                     </small>
-                  </span>
+                  </p>
                 </div>
               ))
             ) : (

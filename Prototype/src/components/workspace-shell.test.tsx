@@ -36,6 +36,8 @@ test("marks the active CRM route and gives immediate navigation feedback", () =>
   click.preventDefault();
   fireEvent(screen.getByRole("link", { name: "Clients" }), click);
   expect(screen.getByRole("status")).toHaveTextContent("Loading...");
+  expect(screen.getAllByText("Utkarsh Dubey")).toHaveLength(1);
+  expect(screen.queryByText("Workspace ready")).not.toBeInTheDocument();
 });
 
 test("opens and dismisses an accessible responsive navigation drawer", () => {
@@ -59,6 +61,13 @@ test("opens and dismisses an accessible responsive navigation drawer", () => {
     "true",
   );
   expect(sidebar).toHaveAttribute("data-open", "true");
+  expect(screen.getByRole("link", { name: "Overview" })).toHaveFocus();
+
+  fireEvent.keyDown(document, { key: "Escape" });
+
+  expect(screen.getByRole("button", { name: "Open navigation" })).toHaveFocus();
+
+  fireEvent.click(screen.getByRole("button", { name: "Open navigation" }));
 
   fireEvent.click(screen.getByRole("button", { name: "Dismiss navigation" }));
 

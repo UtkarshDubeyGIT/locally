@@ -1,4 +1,4 @@
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -32,14 +32,16 @@ beforeEach(() => {
   });
 });
 
-test("continues the report sequence for agency editing and delivery", async () => {
+test("uses direct workflow headings without decorative section numbering", async () => {
   const view = render(
     await AgencyReport({ params: Promise.resolve({ reportId: "report-a" }) }),
   );
 
+  expect(view.container.querySelector(".section__number")).toBeNull();
+  expect(screen.queryByText("04")).not.toBeInTheDocument();
+  expect(screen.queryByText("05")).not.toBeInTheDocument();
   expect(
-    [...view.container.querySelectorAll(".section__number")].map(
-      (node) => node.textContent,
-    ),
-  ).toEqual(["04", "05"]);
+    screen.getByRole("heading", { name: "Agency summary and next steps" }),
+  ).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Approve and send" })).toBeVisible();
 });

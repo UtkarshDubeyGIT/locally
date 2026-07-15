@@ -16,30 +16,47 @@ function rule(css: string, selector: string) {
   return css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`))?.[1];
 }
 
-test("keeps the landing hero as the only oversized editorial heading", () => {
-  expect(rule(globals, "h1, h2, .display")).toMatch(/font-weight:\s*500/);
+test("reserves editorial type for the brand and landing hero", () => {
+  expect(rule(globals, "h1, h2, h3")).toMatch(/font-family:\s*var\(--body\)/);
+  expect(rule(globals, "h1, h2, h3")).toMatch(/font-style:\s*normal/);
   expect(rule(globals, "h1")).toMatch(
-    /font-size:\s*clamp\(2\.6rem,\s*5vw,\s*5rem\)/,
+    /font-size:\s*clamp\(2rem,\s*4vw,\s*3\.75rem\)/,
   );
   expect(rule(globals, "h2")).toMatch(
-    /font-size:\s*clamp\(1\.8rem,\s*3vw,\s*3rem\)/,
+    /font-size:\s*clamp\(1\.45rem,\s*2\.4vw,\s*2\.25rem\)/,
   );
   expect(rule(globals, ".page-head h1")).toMatch(
-    /font-size:\s*clamp\(2rem,\s*3\.1vw,\s*3\.2rem\)/,
+    /font-size:\s*clamp\(1\.75rem,\s*2\.5vw,\s*2\.6rem\)/,
   );
-  expect(rule(globals, ".empty h3")).toMatch(/font-size:\s*1\.7rem/);
+  expect(rule(globals, ".page-head h1")).toMatch(/font-style:\s*normal/);
+  expect(rule(globals, ".empty h3")).toMatch(/font-size:\s*1\.1rem/);
 
   const heroTitle = rule(landing, ".heroTitle");
   expect(heroTitle).toMatch(
-    /font-size:\s*clamp\(4rem,\s*8\.5vw,\s*8\.2rem\)/,
+    /font-size:\s*clamp\(3\.5rem,\s*7\.5vw,\s*7rem\)/,
   );
+  expect(heroTitle).toMatch(/font-family:\s*var\(--display\)/);
+  expect(heroTitle).toMatch(/line-height:\s*1\.02/);
   expect(heroTitle).toMatch(/font-weight:\s*600/);
   expect(rule(landing, ".sectionTitle")).toMatch(
-    /font-size:\s*clamp\(2\.5rem,\s*4\.8vw,\s*4\.5rem\)/,
+    /font-size:\s*clamp\(2rem,\s*4vw,\s*3\.6rem\)/,
   );
   expect(rule(landing, ".closingTitle")).toMatch(
-    /font-size:\s*clamp\(2\.3rem,\s*4\.5vw,\s*4rem\)/,
+    /font-size:\s*clamp\(1\.8rem,\s*3\.2vw,\s*3rem\)/,
   );
+});
+
+test("uses accessible, deliberate product controls", () => {
+  expect(globals).toContain("--muted: #67655f");
+  expect(rule(globals, ":focus-visible")).toMatch(
+    /outline:\s*2px solid var\(--ink\)/,
+  );
+  expect(rule(globals, ":focus-visible")).toMatch(
+    /box-shadow:\s*0 0 0 4px var\(--accent\)/,
+  );
+  expect(rule(globals, ".button")).toMatch(/min-height:\s*44px/);
+  expect(rule(globals, ".button")).toMatch(/border-radius:\s*10px/);
+  expect(rule(globals, ".field::placeholder")).toMatch(/color:\s*#6f6d67/);
 });
 
 test("uses compact CRM spacing and a Phase 1 inspired agency shell", () => {
@@ -58,6 +75,25 @@ test("uses compact CRM spacing and a Phase 1 inspired agency shell", () => {
   expect(rule(globals, ".loading-indicator")).toMatch(
     /animation:\s*loading-pulse\s*1\.1s\s*ease-in-out\s*infinite/,
   );
+});
+
+test("uses low-contrast surfaces and mobile-safe work rows", () => {
+  expect(rule(globals, ".card")).toMatch(/border:\s*0/);
+  expect(rule(globals, ".card")).toMatch(/background:\s*var\(--surface\)/);
+  expect(rule(globals, ".list-row--split")).toMatch(
+    /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*auto/,
+  );
+
+  const mobile = globals.slice(
+    globals.indexOf("@media (max-width: 640px)"),
+    globals.indexOf("@media (prefers-reduced-motion: reduce)"),
+  );
+  expect(rule(mobile, ".list-row--split")).toMatch(
+    /grid-template-columns:\s*1fr/,
+  );
+  expect(rule(mobile, ".topnav .badge")).toMatch(/display:\s*none/);
+  expect(rule(mobile, ".navigation-status")).toMatch(/position:\s*fixed/);
+  expect(rule(mobile, ".form-actions")).toMatch(/flex-direction:\s*column/);
 });
 
 test("keeps the desktop rail stable and converts it to a mobile drawer", () => {
@@ -101,8 +137,8 @@ test("constrains the sign-in artwork to a responsive portrait frame", () => {
   expect(visual).toMatch(/place-items:\s*center/);
 
   const artwork = rule(globals, ".login__visual .hero");
-  expect(artwork).toMatch(/width:\s*min\(100%,\s*680px\)/);
-  expect(artwork).toMatch(/aspect-ratio:\s*6\s*\/\s*5/);
+  expect(artwork).toMatch(/width:\s*min\(100%,\s*560px\)/);
+  expect(artwork).toMatch(/aspect-ratio:\s*4\s*\/\s*5/);
   expect(artwork).toMatch(/min-height:\s*0/);
 
   const tablet = globals.slice(
@@ -110,10 +146,10 @@ test("constrains the sign-in artwork to a responsive portrait frame", () => {
     globals.indexOf("@media (max-width: 640px)"),
   );
   expect(rule(tablet, ".login__visual .hero")).toMatch(
-    /width:\s*min\(100%,\s*680px\)/,
+    /width:\s*min\(100%,\s*560px\)/,
   );
   expect(rule(tablet, ".login__visual .hero")).toMatch(
-    /height:\s*clamp\(280px,\s*42svh,\s*420px\)/,
+    /height:\s*clamp\(220px,\s*32svh,\s*320px\)/,
   );
 
   const mobile = globals.slice(
@@ -121,7 +157,7 @@ test("constrains the sign-in artwork to a responsive portrait frame", () => {
     globals.indexOf("@media (prefers-reduced-motion: reduce)"),
   );
   expect(rule(mobile, ".login__visual .hero")).toMatch(
-    /height:\s*clamp\(240px,\s*34svh,\s*300px\)/,
+    /height:\s*clamp\(160px,\s*24svh,\s*190px\)/,
   );
 });
 

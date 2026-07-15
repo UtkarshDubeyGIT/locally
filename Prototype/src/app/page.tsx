@@ -1,35 +1,35 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Brand } from "@/components/brand";
-
-import { actorHome, getActor } from "@/lib/auth";
 import { redirect } from "next/navigation";
+
+import { Brand } from "@/components/brand";
+import { actorHome, getActor } from "@/lib/auth";
 
 import styles from "./landing.module.css";
 
 export const metadata: Metadata = {
-  title: "Local search, looked after",
+  title: "Local search, managed",
   description:
-    "Locally keeps reviews, listings, audits, actions and client updates moving in one calm workspace.",
+    "Manage reviews, listings, audits, actions and approved client reports across every business location.",
 };
 
 const workflow = [
   {
     title: "See what changed",
-    copy: "Reviews, listing health and branch performance arrive with their source and freshness intact.",
+    copy: "Check new reviews, listing health and branch performance with the source and capture time attached.",
   },
   {
-    title: "Turn signals into owned work",
-    copy: "Useful findings become clear actions with a person, a priority and a next date.",
+    title: "Assign the next action",
+    copy: "Turn a useful finding into owned work with a priority, assignee and due date.",
   },
   {
-    title: "Review before publishing",
-    copy: "AI can prepare a thoughtful reply. Your team checks the facts, tone and risk before anything moves.",
+    title: "Check every reply",
+    copy: "Use AI for a first draft, then verify the facts, tone and risk before approval.",
   },
   {
-    title: "Share the right story",
-    copy: "Clients see safe progress and approved monthly updates—not the internal work behind them.",
+    title: "Report approved progress",
+    copy: "Give clients clear metrics, completed work and next steps without exposing internal notes.",
   },
 ] as const;
 
@@ -51,70 +51,34 @@ export default async function Home() {
           <a className={styles.navText} href="#workflow">
             How it works
           </a>
-          <Link className={styles.navAction} href="/login">
-            Sign in
-          </Link>
         </nav>
       </header>
 
       <main id="main-content">
         <section className={styles.heroSection} aria-labelledby="landing-title">
-          <div className={styles.heroFrame}>
-            <span
-              className={`${styles.heroSpine} ${styles.heroSpineLeft}`}
-              aria-hidden="true"
-            >
-              For local-search teams
-            </span>
-            <span
-              className={`${styles.heroSpine} ${styles.heroSpineRight}`}
-              aria-hidden="true"
-            >
-              Human-reviewed automation
-            </span>
+          <div className={styles.heroMedia}>
+            <Image
+              className={styles.heroImage}
+              src="/images/sweet-shop-hero.webp"
+              alt="A sweet-shop worker arranging mithai in a display"
+              fill
+              priority
+              sizes="(max-width: 720px) 100vw, 94vw"
+            />
+            <span className={styles.heroShade} aria-hidden="true" />
 
-            <div className={styles.heroMedia}>
-              <Image
-                className={styles.heroImage}
-                src="/images/sweet-shop-hero.webp"
-                alt="A sweet-shop worker arranging mithai in a display"
-                fill
-                priority
-                sizes="(max-width: 720px) 100vw, 94vw"
-              />
-              <span className={styles.heroShade} aria-hidden="true" />
-
-              <div className={styles.heroCopy}>
-                <p className={`${styles.heroEyebrow} eyebrow`}>
-                  Your local-search workspace
-                </p>
-                <h1 id="landing-title" className={styles.heroTitle}>
-                  <span>Local search,</span>{" "}
-                  <em>looked after.</em>
-                </h1>
-                <p className={styles.heroText}>
-                  One calm place for the work that helps every location show up,
-                  respond well and keep improving.
-                </p>
-              </div>
-
-              <div className={styles.heroAction}>
-                <Link
-                  className={`seal ${styles.heroSeal}`}
-                  href="/login"
-                  aria-label="Enter the workspace"
-                >
-                  Enter
-                  <span>the workspace</span>
-                  <span aria-hidden="true">↗</span>
-                </Link>
-              </div>
+            <div className={styles.heroCopy}>
+              <h1 id="landing-title" className={styles.heroTitle}>
+                <span>Local search,</span> <em>managed.</em>
+              </h1>
+              <p className={styles.heroText}>
+                Manage reviews, listings, audits, actions and monthly updates
+                across every location, with people approving what gets published.
+              </p>
+              <Link className={styles.heroAction} href="/login">
+                Sign in <span aria-hidden="true">&#8599;</span>
+              </Link>
             </div>
-
-            <p className={styles.heroCaption}>
-              Reviews, listings, audits, actions and monthly updates—held
-              together without losing the human judgement behind the work.
-            </p>
           </div>
         </section>
 
@@ -124,74 +88,41 @@ export default async function Home() {
           aria-labelledby="workflow-title"
         >
           <div className={styles.workflowIntro}>
-            <p className="eyebrow">From signal to story</p>
-            <div>
-              <h2 id="workflow-title" className={styles.sectionTitle}>
-                The work stays human. The repetition doesn&apos;t.
-              </h2>
-              <p className={styles.sectionCopy}>
-                Locally keeps the routine moving while every consequential
-                decision stays with the people who know the business.
-              </p>
-            </div>
-          </div>
-
-          <ol className={styles.workflowList}>
-            {workflow.map((step, index) => (
-              <li className={styles.workflowItem} key={step.title}>
-                <span className={styles.workflowIndex} aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <div>
-                  <h3>{step.title}</h3>
-                  <p>{step.copy}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className={styles.closing} aria-labelledby="closing-title">
-          <div>
-            <p className="eyebrow">A quieter operating rhythm</p>
-            <h2 id="closing-title" className={styles.closingTitle}>
-              Automation prepares. People decide.
+            <h2 id="workflow-title" className={styles.sectionTitle}>
+              See what changed. Decide what happens next.
             </h2>
-            <p className={styles.closingCopy}>
-              Explore Locally through the owner, specialist and client views.
-              Every demo record is clearly labelled and safe to try.
+            <p className={styles.sectionCopy}>
+              Locally keeps routine work moving while your team owns every
+              decision that reaches a customer or client.
             </p>
           </div>
 
-          <div className={styles.closingAction}>
-            <span className={styles.sweetTray} aria-hidden="true">
-              <span
-                className={`${styles.sweet} ${styles.sweetRound}`}
-                data-sweet-motion
-                aria-hidden="true"
-              />
-              <span
-                className={`${styles.sweet} ${styles.sweetDiamond}`}
-                data-sweet-motion
-                aria-hidden="true"
-              />
-              <span
-                className={`${styles.sweet} ${styles.sweetSquare}`}
-                data-sweet-motion
-                aria-hidden="true"
-              />
-            </span>
-            <Link className="button button--primary" href="/login">
-              Open Locally <span aria-hidden="true">→</span>
-            </Link>
-          </div>
+          <ul className={styles.workflowList}>
+            {workflow.map((step) => (
+              <li className={styles.workflowItem} key={step.title}>
+                <h3>{step.title}</h3>
+                <p>{step.copy}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className={styles.closing} aria-labelledby="closing-title">
+          <h2 id="closing-title" className={styles.closingTitle}>
+            AI drafts. Your team approves.
+          </h2>
+          <p className={styles.closingCopy}>
+            Owner, specialist and client views keep private work private and
+            approved progress easy to understand.
+          </p>
         </section>
       </main>
 
       <footer className={styles.footer}>
-        <span className="brand"><Brand /></span>
-        <p>A calm operating system for local-search work.</p>
-        <p>Fictional businesses. Real workflows.</p>
+        <span className="brand">
+          <Brand />
+        </span>
+        <p>Madhur Sweets and all demo business data are fictional.</p>
       </footer>
     </div>
   );

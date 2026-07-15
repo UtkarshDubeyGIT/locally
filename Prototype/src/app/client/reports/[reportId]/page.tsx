@@ -22,8 +22,8 @@ export default async function ClientReport({
       <div className="page-head report-page-head">
         <div>
           <p className="eyebrow">{formatDate(report.month, { month: "long", year: "numeric" })}</p>
-          <h1>{report.clients.business_name}, this was your month.</h1>
-          <p>A clear view of what grew, what needs attention, and where the work goes next.</p>
+          <h1>{report.clients.business_name} monthly report</h1>
+          <p>Rating movement, completed work, branch comparison, and next steps.</p>
         </div>
         <div className="report-page-head__actions">
           <Badge tone={report.status === "sent" ? "good" : "accent"}>{titleCase(report.status)}</Badge>
@@ -37,9 +37,8 @@ export default async function ClientReport({
 
       <div className="report-feedback">
         <Section
-          number="04"
-          title="Was this useful?"
-          intro="You can return and update one feedback response for this report."
+          title="Report feedback"
+          intro="You can update your response for this report at any time."
         >
           <Card>
             <form action={saveFeedbackAction} className="stack">
@@ -59,15 +58,16 @@ export default async function ClientReport({
                   defaultValue={
                     Array.isArray(feedback?.categories_json)
                       ? feedback.categories_json.join(", ")
-                      : "clearer next steps"
+                      : ""
                   }
+                  placeholder="For example, clearer next steps"
                 />
               </Label>
               <Label>
                 Comment
                 <Textarea name="comment" defaultValue={feedback?.comment ?? ""} />
               </Label>
-              <PendingButton pendingLabel="Saving feedback...">Save feedback</PendingButton>
+              <PendingButton pendingLabel="Saving feedback…">Save feedback</PendingButton>
             </form>
           </Card>
         </Section>

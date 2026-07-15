@@ -17,9 +17,8 @@ export default async function ClientReports() {
     <>
       <div className="page-head reports-page-head">
         <div>
-          <p className="eyebrow">Approved monthly updates</p>
-          <h1>Growth, month by month.</h1>
-          <p>See what improved, what moved, and where the next month’s work is focused.</p>
+          <h1>Reports</h1>
+          <p>Approved monthly performance, actions, branch comparisons, and next steps.</p>
         </div>
       </div>
 
@@ -35,14 +34,18 @@ export default async function ClientReports() {
         <section className="report-archive" aria-labelledby="report-archive-heading">
           <div className="section__head">
             <div>
-              <p className="eyebrow">Report archive</p>
-              <h2 id="report-archive-heading">Earlier progress.</h2>
+              <h2 id="report-archive-heading">Previous reports</h2>
             </div>
           </div>
           <div className="report-archive__grid">
             {archive.map((report) => {
               const growth = getReportGrowth(report.metrics_json);
               const month = formatDate(report.month, { month: "long", year: "numeric" });
+              const changeTone = growth.metrics.ratingChange > 0
+                ? "positive"
+                : growth.metrics.ratingChange < 0
+                  ? "negative"
+                  : "neutral";
               return (
                 <Link className="report-archive-card" href={`/client/reports/${report.id}`} key={report.id}>
                   <div className="report-archive-card__meta">
@@ -51,7 +54,9 @@ export default async function ClientReports() {
                   </div>
                   <div className="report-archive-card__rating">
                     <strong>{growth.metrics.averageRating.toFixed(1)}</strong>
-                    <span>{growth.metrics.ratingChange > 0 ? "+" : ""}{growth.metrics.ratingChange.toFixed(1)} rating</span>
+                    <span className={`rating-delta rating-delta--${changeTone}`}>
+                      {growth.metrics.ratingChange > 0 ? "+" : ""}{growth.metrics.ratingChange.toFixed(1)} rating
+                    </span>
                   </div>
                   <p>{report.agency_summary ?? "Monthly progress summary"}</p>
                   <span className="report-archive-card__link">Read report <span aria-hidden>→</span></span>
@@ -72,10 +77,10 @@ function LatestGrowthReport({ report }: { report: Awaited<ReturnType<typeof getC
   const change = growth.metrics.ratingChange;
   const headline =
     change > 0
-      ? `A ${change.toFixed(1)}-point step in the right direction.`
+      ? `Average rating increased by ${change.toFixed(1)}.`
       : change < 0
-        ? "A clear plan for rating recovery."
-        : "A steady month with room to build.";
+        ? `Average rating decreased by ${Math.abs(change).toFixed(1)}.`
+        : "Average rating was unchanged.";
   const previousY = 62 - growth.previousRating * 9;
   const currentY = 62 - growth.metrics.averageRating * 9;
 
@@ -86,7 +91,7 @@ function LatestGrowthReport({ report }: { report: Awaited<ReturnType<typeof getC
           <Badge tone={report.status === "sent" ? "good" : "accent"}>{titleCase(report.status)}</Badge>
           <span>{month}</span>
         </div>
-        <p className="eyebrow">Latest progress story</p>
+        <p className="eyebrow">Latest report</p>
         <h2>{headline}</h2>
         <p>{report.agency_summary ?? "Your agency summary and next steps will appear here."}</p>
         <Link
@@ -94,7 +99,7 @@ function LatestGrowthReport({ report }: { report: Awaited<ReturnType<typeof getC
           href={`/client/reports/${report.id}`}
           aria-label={`View ${monthName} growth report`}
         >
-          View growth report <span aria-hidden>→</span>
+          View report <span aria-hidden>→</span>
         </Link>
       </div>
       <div className="report-latest__visual">
