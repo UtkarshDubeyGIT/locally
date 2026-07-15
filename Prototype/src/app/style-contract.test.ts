@@ -25,7 +25,7 @@ test("keeps the landing hero as the only oversized editorial heading", () => {
     /font-size:\s*clamp\(1\.8rem,\s*3vw,\s*3rem\)/,
   );
   expect(rule(globals, ".page-head h1")).toMatch(
-    /font-size:\s*clamp\(2\.8rem,\s*5vw,\s*4\.75rem\)/,
+    /font-size:\s*clamp\(2rem,\s*3\.1vw,\s*3\.2rem\)/,
   );
   expect(rule(globals, ".empty h3")).toMatch(/font-size:\s*1\.7rem/);
 
@@ -39,6 +39,24 @@ test("keeps the landing hero as the only oversized editorial heading", () => {
   );
   expect(rule(landing, ".closingTitle")).toMatch(
     /font-size:\s*clamp\(2\.3rem,\s*4\.5vw,\s*4rem\)/,
+  );
+});
+
+test("uses compact CRM spacing and a Phase 1 inspired agency shell", () => {
+  expect(rule(globals, ".main")).toMatch(/width:\s*min\(1480px,\s*100%\)/);
+  expect(rule(globals, ".page-head")).toMatch(/margin-bottom:\s*1\.5rem/);
+  expect(rule(globals, ".section")).toMatch(/margin-top:\s*2\.25rem/);
+  expect(rule(globals, '.shell[data-area="agency"] .sidebar')).toMatch(
+    /background:\s*var\(--ink\)/,
+  );
+  expect(rule(globals, ".crm-metrics")).toMatch(
+    /grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\)/,
+  );
+  expect(rule(globals, ".crm-dashboard-grid")).toMatch(
+    /grid-template-columns:\s*minmax\(0,\s*1\.65fr\)\s*minmax\(280px,\s*\.75fr\)/,
+  );
+  expect(rule(globals, ".loading-indicator")).toMatch(
+    /animation:\s*loading-pulse\s*1\.1s\s*ease-in-out\s*infinite/,
   );
 });
 

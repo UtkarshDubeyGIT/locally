@@ -1,20 +1,20 @@
+import { RouteLoading } from "@/components/route-loading";
 import { Skeleton } from "@/components/ui";
 
 export default function AgencyLoading() {
   return (
-    <div className="stack" role="status" aria-live="polite">
-      <span className="sr-only">Loading agency workspace…</span>
-      <Skeleton className="h-20" />
-      <div className="grid grid--4">
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
-        <Skeleton className="h-32" />
+    <RouteLoading>
+      <Skeleton className="h-12" />
+      <div className="crm-metrics crm-metrics--loading">
+        {Array.from({ length: 5 }, (_, index) => (
+          <Skeleton className="h-20" key={index} />
+        ))}
       </div>
-      <div className="grid grid--2">
-        <Skeleton className="h-48" />
-        <Skeleton className="h-48" />
+      <div className="crm-dashboard-grid">
+        <Skeleton className="h-64" />
+        <Skeleton className="h-64" />
       </div>
-    </div>
+      <Skeleton className="h-48" />
+    </RouteLoading>
   );
 }
