@@ -115,6 +115,10 @@ export default async function ActionsPage() {
               </Select>
             </Label>
             <Label>
+              Due date
+              <Input name="dueDate" type="date" />
+            </Label>
+            <Label>
               <span>Visibility</span>
               <span>
                 <input type="checkbox" name="clientVisible" defaultChecked /> Client

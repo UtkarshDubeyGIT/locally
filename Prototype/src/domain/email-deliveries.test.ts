@@ -40,14 +40,14 @@ describe("email delivery kinds", () => {
       "utf8",
     );
 
-    expect(clientsAction).toContain("kind:emailDeliveryKinds.onboarding");
-    expect(reportsAction).toContain("kind:emailDeliveryKinds.monthlyUpdate");
+    expect(clientsAction).toMatch(/kind:\s*emailDeliveryKinds\.onboarding/);
+    expect(reportsAction).toMatch(/kind:\s*emailDeliveryKinds\.monthlyUpdate/);
     expect(`${clientsAction}\n${reportsAction}`).not.toMatch(
       /onboarding_invite|monthly_report/,
     );
-    expect(reportsAction).toContain(
-      'const {error:deliveryError}=await db.from("email_deliveries").insert',
+    expect(reportsAction).toMatch(
+      /const \{\s*error:\s*deliveryError\s*\}\s*=\s*await db\.from\("email_deliveries"\)\.insert/,
     );
-    expect(reportsAction).toContain("if(deliveryError)throw deliveryError;");
+    expect(reportsAction).toMatch(/if \(deliveryError\) throw deliveryError;/);
   });
 });

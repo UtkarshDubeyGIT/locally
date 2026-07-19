@@ -19,6 +19,10 @@ export default async function AgencyHome() {
   const reportsAwaitingApproval = data.reports.filter(
     (report) => report.status === "awaiting_owner_approval",
   );
+  const today = new Date().toISOString().slice(0, 10);
+  const overdueActions = openActions.filter(
+    (action) => action.due_date && action.due_date < today,
+  );
   const locationById = new Map(
     data.locations.map((location) => [location.id, location]),
   );
@@ -45,9 +49,9 @@ export default async function AgencyHome() {
       href: "/agency/actions",
       title: action.title,
       meta: `${clientById.get(action.client_id)?.business_name ?? "Client"} · ${action.due_date ? `Due ${formatDate(action.due_date)}` : "No due date"}`,
-      label: `${titleCase(action.priority)} priority`,
-      tone: action.priority === "high" ? "bad" as const : "neutral" as const,
-      rank: action.priority === "high" ? 1 : 3,
+      label: action.due_date && action.due_date < today ? "Overdue" : `${titleCase(action.priority)} priority`,
+      tone: action.due_date && action.due_date < today ? "bad" as const : action.priority === "high" ? "bad" as const : "neutral" as const,
+      rank: action.due_date && action.due_date < today ? 1 : action.priority === "high" ? 2 : 3,
     })),
   ].sort((left, right) => left.rank - right.rank).slice(0, 6);
 
@@ -83,7 +87,7 @@ export default async function AgencyHome() {
       <div className="crm-metric"><span>Visible clients</span><strong>{data.clients.length}</strong><small>{activeClients.length} active</small></div>
       <div className="crm-metric"><span>Active locations</span><strong>{activeLocations.length}</strong><small>{data.locations.length} total</small></div>
       <div className="crm-metric crm-metric--warning"><span>Reply queue</span><strong>{needsReply.length}</strong><small>{needsReply.filter((review) => review.severity === "high").length} high severity</small></div>
-      <div className="crm-metric"><span>Open actions</span><strong>{openActions.length}</strong><small>{openActions.filter((action) => action.priority === "high").length} high priority</small></div>
+      <div className="crm-metric crm-metric--warning"><span>Overdue actions</span><strong>{overdueActions.length}</strong><small>{openActions.length} open total</small></div>
       <div className="crm-metric"><span>Report approvals</span><strong>{reportsAwaitingApproval.length}</strong><small>{data.reports.length} updates tracked</small></div>
     </section>
 

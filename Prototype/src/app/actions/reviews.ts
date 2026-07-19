@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { canApproveReply, validateReplySafety } from "@/domain/workflows";
 import { requireActor } from "@/lib/auth";
-import { consumeQuota } from "@/lib/integrations/quota";
+import { consumeQuota, ensureQuotaAvailable } from "@/lib/integrations/quota";
 import { generateReviewReply } from "@/lib/integrations/openai";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -81,6 +81,9 @@ export async function generateReplyAction(
     stage = "load";
     const { db, review, policy } = await reviewContext(reviewId);
 
+    stage = "quota";
+    await ensureQuotaAvailable(actor, "openai");
+
     stage = "generate";
     const generated = await generateReviewReply({
       review: review.review_text,
@@ -91,7 +94,6 @@ export async function generateReplyAction(
       escalationCategories: policy?.escalation_categories ?? [],
     });
 
-    // Count completed provider generations, not failed attempts.
     stage = "quota";
     await consumeQuota(actor, "openai");
 

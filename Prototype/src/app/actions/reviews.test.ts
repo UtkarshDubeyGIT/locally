@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   requireActor: vi.fn(),
   consumeQuota: vi.fn(),
+  ensureQuotaAvailable: vi.fn(),
   generateReviewReply: vi.fn(),
   createSupabaseServerClient: vi.fn(),
   revalidatePath: vi.fn(),
@@ -10,7 +11,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("@/lib/auth", () => ({ requireActor: mocks.requireActor }));
-vi.mock("@/lib/integrations/quota", () => ({ consumeQuota: mocks.consumeQuota }));
+vi.mock("@/lib/integrations/quota", () => ({
+  consumeQuota: mocks.consumeQuota,
+  ensureQuotaAvailable: mocks.ensureQuotaAvailable,
+}));
 vi.mock("@/lib/integrations/openai", () => ({ generateReviewReply: mocks.generateReviewReply }));
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: mocks.createSupabaseServerClient,
@@ -100,6 +104,7 @@ describe("generateReplyAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireActor.mockResolvedValue(actor);
+    mocks.ensureQuotaAvailable.mockResolvedValue({ used: 0, limit: 20 });
     mocks.consumeQuota.mockResolvedValue({ used: 1, limit: 20 });
     mocks.generateReviewReply.mockResolvedValue(generatedReply);
   });
@@ -128,7 +133,23 @@ describe("generateReplyAction", () => {
     await runGenerateReplyAction({}, reviewForm());
 
     expect(mocks.generateReviewReply).toHaveBeenCalledOnce();
+    expect(mocks.ensureQuotaAvailable).toHaveBeenCalledOnce();
     expect(mocks.consumeQuota).not.toHaveBeenCalled();
+  });
+
+  it("blocks over-limit users before calling OpenAI", async () => {
+    const { database } = createDatabaseDouble();
+    mocks.createSupabaseServerClient.mockResolvedValue(database);
+    mocks.ensureQuotaAvailable.mockRejectedValue(
+      new Error("Daily openai limit reached. Try again tomorrow."),
+    );
+
+    const state = await runGenerateReplyAction({}, reviewForm());
+
+    expect(mocks.generateReviewReply).not.toHaveBeenCalled();
+    expect(mocks.consumeQuota).not.toHaveBeenCalled();
+    expect(state).toMatchObject({ status: "error" });
+    expect(state.message).toMatch(/limit|reached|try again/i);
   });
 
   it("consumes quota, persists the reply, updates the review, and returns success", async () => {

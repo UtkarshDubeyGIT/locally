@@ -1,4 +1,5 @@
 "use server";
+
 import { revalidatePath } from "next/cache";
 import { requireActor } from "@/lib/auth";
 import { consumeQuota } from "@/lib/integrations/quota";
@@ -6,9 +7,154 @@ import { distanceKm, runPageSpeed, searchPlaces } from "@/lib/integrations/googl
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database";
 
-export async function updateActionStatus(form:FormData){await requireActor(["agency_owner","seo_employee"]);const db=await createSupabaseServerClient();const id=String(form.get("id"));const status=String(form.get("status")) as "open"|"in_progress"|"done";const {error}=await db.from("actions").update({status,completed_at:status==="done"?new Date().toISOString():null}).eq("id",id);if(error)throw error;revalidatePath("/agency/actions")}
-export async function createManualAction(form:FormData){const actor=await requireActor(["agency_owner","seo_employee"]);const db=await createSupabaseServerClient();const {error}=await db.from("actions").insert({client_id:String(form.get("clientId")),location_id:String(form.get("locationId"))||null,title:String(form.get("title")),source_type:"manual",priority:String(form.get("priority")) as "low"|"medium"|"high",assigned_to:actor.id,client_visible:form.get("clientVisible")==="on",created_by:actor.id});if(error)throw error;revalidatePath("/agency/actions")}
-export async function runAuditAction(form:FormData){const actor=await requireActor(["agency_owner","seo_employee"]);const db=await createSupabaseServerClient();const locationId=String(form.get("locationId"));const strategy=String(form.get("strategy")) as "mobile"|"desktop";const {data:location,error}=await db.from("locations").select("website_url").eq("id",locationId).single();if(error||!location.website_url)throw new Error("This location has no registered page URL.");await consumeQuota(actor,"pagespeed");const appUrl=process.env.NEXT_PUBLIC_APP_URL??"http://localhost:3000";const pageUrl=location.website_url.startsWith("http")?location.website_url:new URL(location.website_url,appUrl).toString();const result=await runPageSpeed(pageUrl,strategy);const {data:audit,error:insertError}=await db.from("website_audits").insert({location_id:locationId,page_url:pageUrl,strategy,performance_score:result.performance,accessibility_score:result.accessibility,seo_score:result.seo,best_practices_score:result.bestPractices,raw_result_json:JSON.parse(JSON.stringify(result.raw)) as Json,source_type:"live_api",run_by:actor.id}).select("id").single();if(insertError)throw insertError;if(result.failed.length){await db.from("website_audit_items").insert(result.failed.map(f=>({audit_id:audit.id,check_name:f.title,category:"lighthouse",status:"fail" as const,details:f.details,recommendation:"Review the Lighthouse diagnostic and remediate on the registered branch page.",check_type:"lighthouse"})))}revalidatePath("/agency/audits")}
-export async function findCompetitorsAction(form:FormData){const actor=await requireActor(["agency_owner","seo_employee"]);const db=await createSupabaseServerClient();const locationId=String(form.get("locationId"));const query=String(form.get("query"));const {data:location,error}=await db.from("locations").select("latitude,longitude").eq("id",locationId).single();if(error||location.latitude===null||location.longitude===null)throw new Error("Location coordinates are required for neighborhood bias.");await consumeQuota(actor,"places");const places=await searchPlaces(query,{latitude:location.latitude,longitude:location.longitude});if(places.length){const {error:saveError}=await db.from("competitors").upsert(places.map(p=>({location_id:locationId,name:p.displayName.text,google_place_id:p.id,rating:p.rating??null,review_count:p.userRatingCount??null,category:p.primaryTypeDisplayName?.text??null,address:p.formattedAddress??null,latitude:p.location?.latitude??null,longitude:p.location?.longitude??null,distance_km:p.location?distanceKm({latitude:location.latitude!,longitude:location.longitude!},p.location):null,google_maps_uri:p.googleMapsUri??null,source_type:"live_api" as const,created_by:actor.id})),{onConflict:"location_id,google_place_id"});if(saveError)throw saveError}revalidatePath("/agency/competitors")}
-export async function addManualCompetitorAction(form:FormData){const actor=await requireActor(["agency_owner","seo_employee"]);const db=await createSupabaseServerClient();const {error}=await db.from("competitors").insert({location_id:String(form.get("locationId")),name:String(form.get("name")),address:String(form.get("address"))||null,analyst_note:String(form.get("note"))||null,source_type:"manual",created_by:actor.id});if(error)throw error;revalidatePath("/agency/competitors")}
-export async function toggleSpecialistAction(form:FormData){await requireActor(["agency_owner"]);const db=await createSupabaseServerClient();const id=String(form.get("id"));const active=form.get("active")==="true";const {error}=await db.from("profiles").update({active:!active}).eq("id",id).eq("role","seo_employee");if(error)throw error;revalidatePath("/agency/team")}
+const actionStatuses = new Set(["open", "in_progress", "done"]);
+const actionPriorities = new Set(["low", "medium", "high"]);
+
+export async function updateActionStatus(form: FormData) {
+  await requireActor(["agency_owner", "seo_employee"]);
+  const db = await createSupabaseServerClient();
+  const id = String(form.get("id") ?? "");
+  const status = String(form.get("status") ?? "");
+  if (!actionStatuses.has(status)) throw new Error("Choose a valid action status.");
+  const { error } = await db
+    .from("actions")
+    .update({ status: status as "open" | "in_progress" | "done", completed_at: status === "done" ? new Date().toISOString() : null })
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath("/agency/actions");
+  revalidatePath("/agency");
+}
+
+export async function createManualAction(form: FormData) {
+  const actor = await requireActor(["agency_owner", "seo_employee"]);
+  const db = await createSupabaseServerClient();
+  const title = String(form.get("title") ?? "").trim();
+  const priority = String(form.get("priority") ?? "medium");
+  const dueDate = String(form.get("dueDate") ?? "");
+  if (!title) throw new Error("Action title is required.");
+  if (!actionPriorities.has(priority)) throw new Error("Choose a valid action priority.");
+  const { error } = await db.from("actions").insert({
+    client_id: String(form.get("clientId") ?? ""),
+    location_id: String(form.get("locationId") || "") || null,
+    title,
+    source_type: "manual",
+    priority: priority as "low" | "medium" | "high",
+    due_date: dueDate || null,
+    assigned_to: actor.id,
+    client_visible: form.get("clientVisible") === "on",
+    created_by: actor.id,
+  });
+  if (error) throw error;
+  revalidatePath("/agency/actions");
+  revalidatePath("/agency");
+}
+
+export async function runAuditAction(form: FormData) {
+  const actor = await requireActor(["agency_owner", "seo_employee"]);
+  const db = await createSupabaseServerClient();
+  const locationId = String(form.get("locationId"));
+  const strategy = String(form.get("strategy")) as "mobile" | "desktop";
+  const { data: location, error } = await db
+    .from("locations")
+    .select("website_url")
+    .eq("id", locationId)
+    .single();
+  if (error || !location.website_url) throw new Error("This location has no registered page URL.");
+  await consumeQuota(actor, "pagespeed");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const pageUrl = location.website_url.startsWith("http") ? location.website_url : new URL(location.website_url, appUrl).toString();
+  const result = await runPageSpeed(pageUrl, strategy);
+  const { data: audit, error: insertError } = await db
+    .from("website_audits")
+    .insert({
+      location_id: locationId,
+      page_url: pageUrl,
+      strategy,
+      performance_score: result.performance,
+      accessibility_score: result.accessibility,
+      seo_score: result.seo,
+      best_practices_score: result.bestPractices,
+      raw_result_json: JSON.parse(JSON.stringify(result.raw)) as Json,
+      source_type: "live_api",
+      run_by: actor.id,
+    })
+    .select("id")
+    .single();
+  if (insertError) throw insertError;
+  if (result.failed.length) {
+    await db.from("website_audit_items").insert(
+      result.failed.map((f) => ({
+        audit_id: audit.id,
+        check_name: f.title,
+        category: "lighthouse",
+        status: "fail" as const,
+        details: f.details,
+        recommendation: "Review the Lighthouse diagnostic and remediate on the registered branch page.",
+        check_type: "lighthouse",
+      })),
+    );
+  }
+  revalidatePath("/agency/audits");
+}
+
+export async function findCompetitorsAction(form: FormData) {
+  const actor = await requireActor(["agency_owner", "seo_employee"]);
+  const db = await createSupabaseServerClient();
+  const locationId = String(form.get("locationId"));
+  const query = String(form.get("query"));
+  const { data: location, error } = await db
+    .from("locations")
+    .select("latitude,longitude")
+    .eq("id", locationId)
+    .single();
+  if (error || location.latitude === null || location.longitude === null) throw new Error("Location coordinates are required for neighborhood bias.");
+  await consumeQuota(actor, "places");
+  const places = await searchPlaces(query, { latitude: location.latitude, longitude: location.longitude });
+  if (places.length) {
+    const { error: saveError } = await db.from("competitors").upsert(
+      places.map((p) => ({
+        location_id: locationId,
+        name: p.displayName.text,
+        google_place_id: p.id,
+        rating: p.rating ?? null,
+        review_count: p.userRatingCount ?? null,
+        category: p.primaryTypeDisplayName?.text ?? null,
+        address: p.formattedAddress ?? null,
+        latitude: p.location?.latitude ?? null,
+        longitude: p.location?.longitude ?? null,
+        distance_km: p.location ? distanceKm({ latitude: location.latitude!, longitude: location.longitude! }, p.location) : null,
+        google_maps_uri: p.googleMapsUri ?? null,
+        source_type: "live_api" as const,
+        created_by: actor.id,
+      })),
+      { onConflict: "location_id,google_place_id" },
+    );
+    if (saveError) throw saveError;
+  }
+  revalidatePath("/agency/competitors");
+}
+
+export async function addManualCompetitorAction(form: FormData) {
+  const actor = await requireActor(["agency_owner", "seo_employee"]);
+  const db = await createSupabaseServerClient();
+  const { error } = await db.from("competitors").insert({
+    location_id: String(form.get("locationId")),
+    name: String(form.get("name")),
+    address: String(form.get("address")) || null,
+    analyst_note: String(form.get("note")) || null,
+    source_type: "manual",
+    created_by: actor.id,
+  });
+  if (error) throw error;
+  revalidatePath("/agency/competitors");
+}
+
+export async function toggleSpecialistAction(form: FormData) {
+  await requireActor(["agency_owner"]);
+  const db = await createSupabaseServerClient();
+  const id = String(form.get("id"));
+  const active = form.get("active") === "true";
+  const { error } = await db.from("profiles").update({ active: !active }).eq("id", id).eq("role", "seo_employee");
+  if (error) throw error;
+  revalidatePath("/agency/team");
+}
