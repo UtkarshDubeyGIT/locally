@@ -1142,7 +1142,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      keepalive: { Args: never; Returns: boolean }
     }
     Enums: {
       action_priority: "low" | "medium" | "high"

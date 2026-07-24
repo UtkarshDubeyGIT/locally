@@ -1,6 +1,6 @@
 # Locally API Overview — Phases 1–5
 
-Last reviewed: 15 July 2026
+Last reviewed: 24 July 2026
 
 ## Purpose
 
@@ -15,14 +15,14 @@ High-level list of APIs represented across the Locally mockups and working demo.
 | **1 — Foundation** | Supabase Auth; Supabase Data API/PostgreSQL; Next.js Server Actions. Supports login, roles, clients, locations, onboarding, reviews, tasks, reports, and feedback. | Implemented in working demo |
 | **2 — Automation** | OpenAI Responses, PageSpeed Insights, Google Places Text Search, Resend, and Vercel. Adds AI reply drafts, live audits, competitor search, email, and hosting. | Implemented |
 | **2 — Live GBP extension** | Google OAuth, GBP Account Management, Business Information, Reviews, Performance, Notifications, and Google Cloud Pub/Sub. Replaces mocked GBP synchronization and publishing. | Mocked / Candidate |
-| **2 — Scheduling** | Vercel Cron Jobs or another scheduler for recurring syncs, audits, reminders, and reports. | Candidate |
+| **2 — Scheduling** | GitHub Actions provides the implemented Supabase keep-alive; Vercel Cron Jobs or another scheduler remains a candidate for recurring product syncs, audits, reminders, and reports. | Partial |
 | **3** | Architecture materials are not present in the workspace. | To be added |
 | **4** | Referenced as a separate presentation, but not present in the workspace. | To be added |
 | **5** | No architecture material is present in the workspace. | To be added |
 
 ## Internal application APIs
 
-The application has no public custom REST or GraphQL API. It uses authenticated Next.js Server Actions and Supabase queries.
+The application has no public business REST or GraphQL API. It uses authenticated Next.js Server Actions and Supabase queries. Its only public operational RPC, `public.keepalive()`, returns a constant boolean for the scheduled Supabase activity check and exposes no application data.
 
 | Area | Main operations |
 | --- | --- |
@@ -40,6 +40,7 @@ The application has no public custom REST or GraphQL API. It uses authenticated 
 | --- | --- | --- | --- | --- | --- |
 | **Supabase Auth** | User identity, sessions, and roles | Free tier; Pro starts around **US$25/month**. MAU and advanced-security charges may apply. | Works naturally with RLS; quick setup | Vendor coupling; RLS must be configured carefully | Implemented |
 | **Supabase Data API + PostgreSQL** | Stores and queries all application data | Database size, compute, backups, and egress drive cost; included within Supabase plans | Managed PostgreSQL; typed CRUD; strong access controls | Complex policies and queries require care | Implemented |
+| **GitHub Actions** | Runs a lightweight Supabase database activity check every six hours | Public-repository standard runners are free; scheduled workflows may be delayed or disabled after repository inactivity | Simple, observable, and independent of the app deployment | Best-effort scheduling; does not provide an uptime guarantee | Implemented for keep-alive |
 | **OpenAI Responses API** | Structured review analysis and reply drafts | `gpt-5-mini`: about **US$0.25/M input tokens** and **US$2/M output tokens** | Strong structured and multilingual output | Variable output, privacy concerns, and human review required | Implemented |
 | **Google PageSpeed Insights API v5** | Website performance, accessibility, SEO, and best-practice audits | No published per-call fee; quotas and latency are the main constraints | Official Lighthouse results; easy integration | Scores vary; slower or quota-limited at scale | Implemented |
 | **Google Places API — Text Search Enterprise** | Finds nearby competitors and public place facts | Current fields trigger Enterprise pricing: first **1,000 requests/month free**, then about **US$35/1,000** | Reliable place IDs, ratings, addresses, and location bias | Billing, attribution, storage rules; not a ranking API | Implemented |
@@ -63,4 +64,4 @@ The application has no public custom REST or GraphQL API. It uses authenticated 
 
 ## References
 
-[Supabase pricing](https://supabase.com/pricing) · [OpenAI pricing](https://developers.openai.com/api/docs/models/gpt-5-mini) · [Google Maps pricing](https://developers.google.com/maps/billing-and-pricing/pricing) · [PageSpeed API](https://developers.google.com/speed/docs/insights/v5/get-started) · [Google Business Profile APIs](https://developers.google.com/my-business/content/overview) · [Resend pricing](https://resend.com/pricing) · [Vercel pricing](https://vercel.com/pricing) · [Pub/Sub pricing](https://cloud.google.com/pubsub/pricing)
+[Supabase project pausing](https://supabase.com/docs/guides/platform/free-project-pausing) · [Supabase pricing](https://supabase.com/pricing) · [GitHub scheduled workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule) · [OpenAI pricing](https://developers.openai.com/api/docs/models/gpt-5-mini) · [Google Maps pricing](https://developers.google.com/maps/billing-and-pricing/pricing) · [PageSpeed API](https://developers.google.com/speed/docs/insights/v5/get-started) · [Google Business Profile APIs](https://developers.google.com/my-business/content/overview) · [Resend pricing](https://resend.com/pricing) · [Vercel pricing](https://vercel.com/pricing) · [Pub/Sub pricing](https://cloud.google.com/pubsub/pricing)

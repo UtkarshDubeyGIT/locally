@@ -90,6 +90,32 @@ npx supabase db reset
 Resetting the local database reapplies migrations and seed data. Do not run the
 reset command against a database containing data you need to preserve.
 
+### Supabase Free Plan keep-alive
+
+The root-level
+[`supabase-keep-alive.yml`](../.github/workflows/supabase-keep-alive.yml)
+workflow runs a harmless database query at minute 17 every six hours. The
+`public.keepalive()` RPC is defined in the Supabase migrations, returns only
+`true`, performs no writes, and is callable with the low-privilege publishable
+key. Do not give this workflow `SUPABASE_SECRET_KEY`.
+
+After deploying the database migrations and adding the workflow to the default
+branch, configure these GitHub Actions repository secrets:
+
+| Secret | Value |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | The project URL used by the application |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | The browser-safe publishable key |
+
+Use **Actions → Supabase keep-alive → Run workflow** to verify the setup
+manually. A successful run must receive the exact response `true`; missing
+secrets and failed or unexpected API responses fail visibly.
+
+This is a best-effort safeguard for Free Plan projects, not an uptime
+guarantee. GitHub can delay scheduled jobs and disables scheduled workflows in
+public repositories after 60 days without repository activity. A paid
+Supabase plan is the supported option when automatic pausing must be ruled out.
+
 ### Run and verify
 
 From `Prototype/`:
