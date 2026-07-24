@@ -1,0 +1,52 @@
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: supabase-keep-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    name: Run a harmless database query
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call the keepalive RPC
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          set -Eeuo pipefail
+
+          : "${SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL secret is not set}"
+          : "${SUPABASE_PUBLISHABLE_KEY:?NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY secret is not set}"
+
+          response="$(
+            curl \
+              --fail-with-body \
+              --silent \
+              --show-error \
+              --proto '=https' \
+              --tlsv1.2 \
+              --connect-timeout 10 \
+              --max-time 30 \
+              --retry 2 \
+              --retry-delay 3 \
+              --retry-all-errors \
+              --request POST \
+              --url "${SUPABASE_URL%/}/rest/v1/rpc/keepalive" \
+              --header "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+              --header "Accept: application/json" \
+              --header "Content-Type: application/json" \
+              --data '{}'
+          )"
+
+          test "$response" = "true"
+          echo "Supabase keep-alive query completed successfully."
